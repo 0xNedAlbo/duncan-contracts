@@ -1,0 +1,14 @@
+# Foundry files
+cache/
+out/
+lib/
+
+# Ignores development broadcast logs
+/broadcast
+
+# Dotenv file
+.env
+.env.arbitrum
+
+# MacOS clutter
+.DS_Store
