@@ -12,7 +12,7 @@ inspect :; forge inspect ${contract} storage-layout --pretty
 test := test_
 
 # local tests without fork
-test  :; forge test -vv 
+test-all  :; forge test -vv 
 trace  :; forge test -vvv 
 gas  :; forge test 
 test-contract  :; forge test -vv --match-contract $(contract) 
