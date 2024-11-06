@@ -19,11 +19,11 @@ contract MarketList is Script {
             string memory shortSymbol = IERC20Metadata(market.shortToken).symbol();
             console.log("%s-%s/%s", marketSymbol, longSymbol, shortSymbol);
             console.log("%s", market.marketToken);
-            /* 
+
             console.log("indexToken: ", market.indexToken);
             console.log("longToken:  ", market.longToken);
             console.log("shortToken:  ", market.shortToken);
-            */
+
             console.log(".-.");
         }
     }

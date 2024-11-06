@@ -3,14 +3,19 @@ pragma solidity ^0.8.0;
 
 import {IERC20, GmxBaseTest, console, IExchangeRouter} from "../GmxBaseTest.t.sol";
 
-import {Order, IBaseOrderUtils} from "@src/interfaces/gmx/IExchangeRouter.sol";
+import {CreateOrderParams, CreateOrderParamsAddresses, CreateOrderParamsNumbers, OrderType, DecreasePositionSwapType, PriceProps, SimulatePricesParams} from "@src/interfaces/gmx/IExchangeRouter.sol";
 
 import {UD60x18, ud, intoUint256} from "@prb/math/src/UD60x18.sol";
 
 contract CreateOrderTest is GmxBaseTest {
-    function test_createOrder() public {
-        uint256 usdcAmount = 100000000;
-        uint256 wethAmount = 86904363000000;
+    function test_openLongPosition() public {
+        //uint256 leverage = 6;
+        uint256 collateralUsd = 1000 * 1e30;
+        uint256 usdcAmount = collateralUsd / 1e24;
+        uint256 positionSizeUsd = 600 * 1e30;
+        uint256 acceptablePriceUsd = 76000 * 1e22;
+
+        uint256 wethAmount = 1 ether;
         mintUsdc(user, usdcAmount);
         mintEth(user, wethAmount);
         // Send tokens to GMX Order Vault
@@ -21,7 +26,7 @@ contract CreateOrderTest is GmxBaseTest {
         vm.stopPrank();
 
         // Create order params
-        IBaseOrderUtils.CreateOrderParamsAddresses memory addresses = IBaseOrderUtils.CreateOrderParamsAddresses(
+        CreateOrderParamsAddresses memory addresses = CreateOrderParamsAddresses(
             user, //receiver
             address(0x0), // cancellationReceiver
             address(0x0), //callbackContract
@@ -30,20 +35,22 @@ contract CreateOrderTest is GmxBaseTest {
             address(USDC), // initialCollateralToken
             new address[](0)
         );
-        IBaseOrderUtils.CreateOrderParamsNumbers memory numbers = IBaseOrderUtils.CreateOrderParamsNumbers(
-            597449487298891841484000000000000, // sizeDeltaUsd
+        emit log_named_decimal_uint("sizeDeltaUsd", positionSizeUsd, 30);
+
+        CreateOrderParamsNumbers memory numbers = CreateOrderParamsNumbers(
+            positionSizeUsd, // sizeDeltaUsd
             0, // initialCollateralDeltaAmount
             0, // triggerPrice
-            706238670482152412942752995, // acceptablePrice
-            86904363000000, // executionFee
+            acceptablePriceUsd, // acceptablePrice
+            wethAmount, // executionFee
             0, // callbackGasLimit
             0 // minOutputAmount
         );
-        IBaseOrderUtils.CreateOrderParams memory params = IBaseOrderUtils.CreateOrderParams(
+        CreateOrderParams memory params = CreateOrderParams(
             addresses,
             numbers,
-            Order.OrderType.MarketIncrease,
-            Order.DecreasePositionSwapType.NoSwap,
+            OrderType.MarketIncrease,
+            DecreasePositionSwapType.NoSwap,
             true, // isLong
             false, // shouldUnwrapNativeToken,
             false, // autoCancel
@@ -51,6 +58,24 @@ contract CreateOrderTest is GmxBaseTest {
         );
 
         vm.prank(user);
-        exchangeRouter.createOrder(params);
+        bytes32 key = exchangeRouter.createOrder(params);
+        emit log_named_bytes32("key", key);
+
+        // Simulate order execution.
+        address[] memory primaryTokens = new address[](3);
+        primaryTokens[0] = WBTC;
+        primaryTokens[1] = 0x47904963fc8b2340414262125aF798B9655E58Cd;
+        primaryTokens[2] = USDC;
+        PriceProps[] memory primaryPrices = new PriceProps[](3);
+        primaryPrices[0] = PriceProps(75000 * 1e22, 75100 * 1e22);
+        primaryPrices[1] = PriceProps(75000 * 1e22, 75100 * 1e22);
+        primaryPrices[2] = PriceProps(0.98 * 1e22, 1.02 * 1e22);
+        SimulatePricesParams memory pricesParams = SimulatePricesParams({
+            primaryTokens: primaryTokens,
+            primaryPrices: primaryPrices,
+            minTimestamp: block.timestamp,
+            maxTimestamp: block.timestamp
+        });
+        exchangeRouter.simulateExecuteOrder(key, pricesParams);
     }
 }

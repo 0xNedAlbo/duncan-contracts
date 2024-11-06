@@ -21,6 +21,7 @@ contract GmxBaseTest is BaseTest {
 
     // Token addresses
     address public USDC;
+    address public WBTC;
 
     // Users
     address public user;
@@ -42,7 +43,9 @@ contract GmxBaseTest is BaseTest {
 
     function setUp_tokens() public virtual override {
         USDC = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+        WBTC = 0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f;
         vm.label(USDC, "USDC");
+        vm.label(WBTC, "WBTC");
     }
 
     function setUp_users() public virtual override {
@@ -71,5 +74,10 @@ contract GmxBaseTest is BaseTest {
     function mintUsdc(address account, uint256 amount) public {
         uint256 balance = IERC20(USDC).balanceOf(account);
         deal(USDC, account, balance + amount);
+    }
+
+    function mintWbtc(address account, uint256 amount) public {
+        uint256 balance = IERC20(WBTC).balanceOf(account);
+        deal(WBTC, account, balance + amount);
     }
 }
