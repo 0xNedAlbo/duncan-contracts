@@ -13,6 +13,7 @@ out = "out"
 test = "test"
 libs = ["lib"]
 script = "scripts"
+fs_permissions = [{ access = "read", path = "./" }]
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY}" }

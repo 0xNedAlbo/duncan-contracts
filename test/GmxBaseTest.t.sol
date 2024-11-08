@@ -5,7 +5,9 @@ import {MockArbSys} from "./arbitrum/MockArbSys.sol";
 import {BaseTest, console} from "./BaseTest.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IExchangeRouter} from "@src/interfaces/gmx/IExchangeRouter.sol";
-import {IReader} from "@src/interfaces/gmx/IReader.sol";
+
+import {MintableToken} from "@gmx-synthetics/mock/MintableToken.sol";
+import {IReader, Market} from "src/interfaces/gmx/IReader.sol";
 
 contract GmxBaseTest is BaseTest {
     uint256 forkId;
@@ -17,7 +19,7 @@ contract GmxBaseTest is BaseTest {
     address public router;
     address public depositVault;
     address public orderVault;
-    address public btcUsdMarket;
+    Market.Props public btcUsdMarket;
 
     // Token addresses
     address public USDC;
@@ -33,8 +35,7 @@ contract GmxBaseTest is BaseTest {
     }
 
     function setUp_fork() public virtual override {
-        string memory rpcUrl = vm.envString("ARBITRUM_RPC_URL");
-        forkId = vm.createSelectFork(rpcUrl);
+        forkId = vm.createSelectFork("http://localhost:8545");
 
         MockArbSys mockArbSys = new MockArbSys();
         bytes memory bytecode = address(mockArbSys).code;
@@ -42,28 +43,27 @@ contract GmxBaseTest is BaseTest {
     }
 
     function setUp_tokens() public virtual override {
-        USDC = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
-        WBTC = 0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f;
+        USDC = gmxContractAddress("USDC");
+        WBTC = gmxContractAddress("WBTC");
         vm.label(USDC, "USDC");
         vm.label(WBTC, "WBTC");
     }
 
     function setUp_users() public virtual override {
-        user = address(1);
+        user = vm.addr(1);
         deal(user, 1 ether);
-        feeReceiver = address(2);
+        feeReceiver = vm.addr(2);
         vm.label(user, "User");
         vm.label(feeReceiver, "FeeReceiver");
     }
 
     function setUp_gmx() public virtual {
-        datastore = 0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8;
-        reader = IReader(0x23D4Da5C7C6902D4C86d551CaE60d5755820df9E);
-        exchangeRouter = IExchangeRouter(0x69C527fC77291722b52649E45c838e41be8Bf5d5);
-        router = 0x7452c558d45f8afC8c83dAe62C3f8A5BE19c71f6;
-        depositVault = 0xF89e77e8Dc11691C9e8757e84aaFbCD8A67d7A55;
-        orderVault = 0x31eF83a530Fde1B38EE9A18093A333D8Bbbc40D5;
-        btcUsdMarket = 0x47c031236e19d024b42f8AE6780E44A573170703;
+        datastore = gmxContractAddress("Datastore");
+        reader = IReader(gmxContractAddress("Reader"));
+        exchangeRouter = IExchangeRouter(gmxContractAddress("ExchangeRouter"));
+        router = gmxContractAddress("Router");
+        orderVault = gmxContractAddress("OrderVault");
+        btcUsdMarket = gmxFindMarket(USDC, WBTC);
 
         vm.label(address(exchangeRouter), "ExchangeRouter");
         vm.label(router, "Router");
@@ -72,12 +72,46 @@ contract GmxBaseTest is BaseTest {
     }
 
     function mintUsdc(address account, uint256 amount) public {
-        uint256 balance = IERC20(USDC).balanceOf(account);
-        deal(USDC, account, balance + amount);
+        MintableToken(USDC).mint(account, amount);
     }
 
     function mintWbtc(address account, uint256 amount) public {
-        uint256 balance = IERC20(WBTC).balanceOf(account);
-        deal(WBTC, account, balance + amount);
+        MintableToken(WBTC).mint(account, amount);
+    }
+
+    function gmxContractAddress(
+        string memory contractName
+    ) public view returns (address contractAddress) {
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(
+            root,
+            "/lib/gmx-synthetics/deployments/localhost/",
+            contractName,
+            ".json"
+        );
+        string memory json = vm.readFile(path);
+        contractAddress = vm.parseJsonAddress(json, ".address");
+    }
+
+    function gmxFindMarket(
+        address shortToken,
+        address longToken
+    ) public view returns (Market.Props memory) {
+        require(
+            longToken != address(0x0) && shortToken != address(0x0),
+            "gmxFindMarket(): zero token address"
+        );
+        uint256 page = 0;
+        address market = address(0x0);
+        while (market == address(0x0) && page < 10) {
+            Market.Props[] memory markets = reader.getMarkets(datastore, page * 10, 10);
+            for (uint256 marketIdx = 0; marketIdx < markets.length; marketIdx++) {
+                Market.Props memory marketProps = markets[marketIdx];
+                if (marketProps.longToken == longToken && marketProps.shortToken == shortToken) {
+                    return marketProps;
+                }
+            }
+        }
+        revert("Unable to find gmx market");
     }
 }

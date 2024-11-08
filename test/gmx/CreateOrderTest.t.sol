@@ -20,7 +20,7 @@ contract CreateOrderTest is GmxBaseTest {
         mintEth(user, wethAmount);
         // Send tokens to GMX Order Vault
         vm.startPrank(user);
-        IERC20(USDC).approve(address(0x7452c558d45f8afC8c83dAe62C3f8A5BE19c71f6), usdcAmount);
+        IERC20(USDC).approve(address(router), usdcAmount);
         exchangeRouter.sendTokens(USDC, orderVault, usdcAmount);
         exchangeRouter.sendWnt{value: wethAmount}(orderVault, wethAmount);
         vm.stopPrank();
@@ -33,7 +33,7 @@ contract CreateOrderTest is GmxBaseTest {
             address(0x0), // cancellationReceiver
             address(callback), // callbackContract
             feeReceiver, //
-            btcUsdMarket,
+            btcUsdMarket.marketToken,
             address(USDC), // initialCollateralToken
             new address[](0)
         );
@@ -66,14 +66,14 @@ contract CreateOrderTest is GmxBaseTest {
         emit log_named_bytes32("=> orderKey", key);
 
         // Simulate order execution.
+        address gmOracleProvider = gmxContractAddress("GmOracleProvider");
+        emit log_named_address("gmOracleProvider", gmOracleProvider);
         address[] memory primaryTokens = new address[](3);
         primaryTokens[0] = WBTC;
-        primaryTokens[1] = 0x47904963fc8b2340414262125aF798B9655E58Cd;
-        primaryTokens[2] = USDC;
+        primaryTokens[1] = USDC;
         PriceProps[] memory primaryPrices = new PriceProps[](3);
         primaryPrices[0] = PriceProps(75000 * 1e22, 75001 * 1e22);
-        primaryPrices[1] = PriceProps(75000 * 1e22, 75001 * 1e22);
-        primaryPrices[2] = PriceProps(0.99999 * 1e22, 1.000001 * 1e22);
+        primaryPrices[1] = PriceProps(0.99999 * 1e22, 1.000001 * 1e22);
         SimulatePricesParams memory pricesParams = SimulatePricesParams({
             primaryTokens: primaryTokens,
             primaryPrices: primaryPrices,

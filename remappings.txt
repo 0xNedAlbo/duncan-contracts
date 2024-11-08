@@ -3,5 +3,6 @@ forge-std/=lib/forge-std/
 @openzeppelin-upgradeable/=lib/openzeppelin-contracts-upgradeable/
 @openzeppelin/=lib/openzeppelin-contracts/
 @mock-tokens/=lib/mock-tokens/
-@prb/math/=lib/prb-math/
+prb-math/=lib/gmx-synthetics/node_modules/prb-math/
 @src/=src/
+@gmx-synthetics=lib/gmx-synthetics/contracts/
