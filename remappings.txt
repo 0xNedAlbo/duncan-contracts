@@ -2,6 +2,6 @@ ds-test/=lib/forge-std/lib/ds-test/
 forge-std/=lib/forge-std/
 @openzeppelin-upgradeable/=lib/openzeppelin-contracts-upgradeable/
 @openzeppelin/=lib/openzeppelin-contracts/
-@mock-tokens/=lib/mock-tokens/src
+@mock-tokens/=lib/mock-tokens/
 @prb/math/=lib/prb-math/
 @src/=src/

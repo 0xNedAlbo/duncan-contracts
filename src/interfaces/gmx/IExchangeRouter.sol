@@ -2,6 +2,43 @@
 
 pragma solidity ^0.8.0;
 
+struct OrderProps {
+    OrderPropsAddresses addresses;
+    OrderPropsNumbers numbers;
+    OrderPropsFlags flags;
+}
+
+struct OrderPropsAddresses {
+    address account;
+    address receiver;
+    address cancellationReceiver;
+    address callbackContract;
+    address uiFeeReceiver;
+    address market;
+    address initialCollateralToken;
+    address[] swapPath;
+}
+struct OrderPropsFlags {
+    bool isLong;
+    bool shouldUnwrapNativeToken;
+    bool isFrozen;
+    bool autoCancel;
+}
+
+struct OrderPropsNumbers {
+    OrderType orderType;
+    DecreasePositionSwapType decreasePositionSwapType;
+    uint256 sizeDeltaUsd;
+    uint256 initialCollateralDeltaAmount;
+    uint256 triggerPrice;
+    uint256 acceptablePrice;
+    uint256 executionFee;
+    uint256 callbackGasLimit;
+    uint256 minOutputAmount;
+    uint256 updatedAtTime;
+    uint256 validFromTime;
+}
+
 enum OrderType {
     // @dev MarketSwap: swap token A to token B at the current market price
     // the order will be cancelled if the minOutputAmount cannot be fulfilled
@@ -92,5 +129,8 @@ interface IExchangeRouter {
 
     function cancelOrder(bytes32 key) external payable;
 
-    function simulateExecuteOrder(bytes32 key, SimulatePricesParams memory simulatedOracleParams) external payable;
+    function simulateExecuteOrder(
+        bytes32 key,
+        SimulatePricesParams memory simulatedOracleParams
+    ) external payable;
 }
