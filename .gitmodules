@@ -11,7 +11,7 @@
 	branch = v4.9
 [submodule "lib/mock-tokens"]
 	path = lib/mock-tokens
-	url = https://github.com/Coinflakes-DAO/mock-tokens
+	url = https://github.com/0xNedAlbo/mock-tokens
 	branch = v0.1
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
@@ -19,3 +19,6 @@
 [submodule "lib/prb-math"]
 	path = lib/prb-math
 	url = https://github.com/PaulRBerg/prb-math
+[submodule "lib/emergency-admin"]
+	path = lib/emergency-admin
+	url = https://github.com/0xNedAlbo/emergency-admin
