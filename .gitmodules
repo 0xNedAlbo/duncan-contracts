@@ -19,6 +19,6 @@
 [submodule "lib/prb-math"]
 	path = lib/prb-math
 	url = https://github.com/PaulRBerg/prb-math
-[submodule "lib/emergency-admin"]
-	path = lib/emergency-admin
-	url = https://github.com/0xNedAlbo/emergency-admin
+[submodule "lib/gmx-synthetics"]
+	path = lib/gmx-synthetics
+	url = https://github.com/gmx-io/gmx-synthetics
